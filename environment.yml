@@ -1,0 +1,16 @@
+name: DL24
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python
+  - pip
+  - matplotlib
+  - numpy
+  - jupyterlab
+  - pytorch
+  - torchvision
+  - opencv
+  - pillow
+  - scikit-learn  
+  - pandas 
