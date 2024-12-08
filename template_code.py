@@ -330,11 +330,11 @@ class MyModel(nn.Module):
     def __init__(self, num_classes=5, dropout_rate=0.5):
         super().__init__()
 
-        self.backbone = models.resnet18(pretrained=True)
+        self.backbone = models.densenet121(pretrained=True)
         self.backbone.fc = nn.Identity()  # Remove the original classification layer
 
         self.fc = nn.Sequential(
-            nn.Linear(512, 256),
+            nn.Linear(1000, 256),
             nn.ReLU(inplace=True),
             nn.Dropout(p=dropout_rate),
             nn.Linear(256, 128),
@@ -413,7 +413,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
 
     # Use GPU device is possible
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('mps')
     print('Device:', device)
 
     # Move class weights to the device
