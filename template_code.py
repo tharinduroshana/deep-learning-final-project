@@ -223,7 +223,7 @@ def train_model(model, train_loader, val_loader, device, criterion, optimizer, l
         epoch_loss = sum(running_loss) / len(running_loss)
 
         train_metrics = compute_metrics(all_preds, all_labels, per_class=True)
-        accuracy, precision, recall, kappa = train_metrics[:4]
+        kappa, accuracy, precision, recall = train_metrics[:4]
 
         print(f'[Train] Kappa: {kappa:.4f} Accuracy: {accuracy:.4f} '
               f'Precision: {precision:.4f} Recall: {recall:.4f} Loss: {epoch_loss:.4f}')
@@ -235,7 +235,8 @@ def train_model(model, train_loader, val_loader, device, criterion, optimizer, l
 
         # Evaluation on the validation set at the end of each epoch
         val_metrics = evaluate_model(model, val_loader, device)
-        val_accuracy, val_precision, val_recall, val_kappa = val_metrics[:4]
+        val_kappa, val_accuracy, val_precision, val_recall = val_metrics[:4]
+
         print(f'[Val] Kappa: {val_kappa:.4f} Accuracy: {val_accuracy:.4f} '
               f'Precision: {val_precision:.4f} Recall: {val_recall:.4f}')
 
