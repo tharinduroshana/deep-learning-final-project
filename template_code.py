@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
 from PIL import Image
 from sklearn.metrics import cohen_kappa_score, precision_score, recall_score, accuracy_score
 from torch.utils.data import Dataset, DataLoader
@@ -184,6 +185,12 @@ def train_model(model, train_loader, val_loader, device, criterion, optimizer, l
     best_epoch = None
     best_val_kappa = -1.0  # Initialize the best kappa score
 
+    # Data for visualization
+    train_losses = []
+    val_losses = []
+    train_accuracies = []
+    val_accuracies = []
+
     for epoch in range(1, num_epochs + 1):
         print(f'\nEpoch {epoch}/{num_epochs}')
         running_loss = []
@@ -228,17 +235,23 @@ def train_model(model, train_loader, val_loader, device, criterion, optimizer, l
         print(f'[Train] Kappa: {kappa:.4f} Accuracy: {accuracy:.4f} '
               f'Precision: {precision:.4f} Recall: {recall:.4f} Loss: {epoch_loss:.4f}')
 
+        train_losses.append(epoch_loss)
+        train_accuracies.append(accuracy)
+
         if len(train_metrics) > 4:
             precision_per_class, recall_per_class = train_metrics[4:]
             for i, (precision, recall) in enumerate(zip(precision_per_class, recall_per_class)):
                 print(f'[Train] Class {i}: Precision: {precision:.4f}, Recall: {recall:.4f}')
 
         # Evaluation on the validation set at the end of each epoch
-        val_metrics = evaluate_model(model, val_loader, device)
-        val_kappa, val_accuracy, val_precision, val_recall = val_metrics[:4]
+        val_metrics = evaluate_model(model, val_loader, device, criterion)
+        val_kappa, val_accuracy, val_precision, val_recall, val_epoch_loss = val_metrics[:5]
 
         print(f'[Val] Kappa: {val_kappa:.4f} Accuracy: {val_accuracy:.4f} '
               f'Precision: {val_precision:.4f} Recall: {val_recall:.4f}')
+
+        val_losses.append(val_epoch_loss)
+        val_accuracies.append(val_accuracy)
 
         if val_kappa > best_val_kappa:
             best_val_kappa = val_kappa
@@ -248,15 +261,18 @@ def train_model(model, train_loader, val_loader, device, criterion, optimizer, l
 
     print(f'[Val] Best kappa: {best_val_kappa:.4f}, Epoch {best_epoch}')
 
+    visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies)
+
     return model
 
 
-def evaluate_model(model, test_loader, device, test_only=False, prediction_path='./test_predictions.csv'):
+def evaluate_model(model, test_loader, device, criterion=None, test_only=False, prediction_path='./test_predictions.csv'):
     model.eval()
 
     all_preds = []
     all_labels = []
     all_image_ids = []
+    running_val_loss = []
 
     with tqdm(total=len(test_loader), desc=f'Evaluating', unit=' batch', file=sys.stdout) as pbar:
         for i, data in enumerate(test_loader):
@@ -265,6 +281,7 @@ def evaluate_model(model, test_loader, device, test_only=False, prediction_path=
                 images = data
             else:
                 images, labels = data
+                labels = labels.to(device)
 
             if not isinstance(images, list):
                 images = images.to(device)  # single image case
@@ -275,6 +292,10 @@ def evaluate_model(model, test_loader, device, test_only=False, prediction_path=
                 outputs = model(images)
                 preds = torch.argmax(outputs, 1)
 
+            if criterion and not test_only:
+                loss = criterion(outputs, labels.long())
+                running_val_loss.append(loss.item())
+
             if not isinstance(images, list):
                 # single image case
                 all_preds.extend(preds.cpu().numpy())
@@ -284,7 +305,7 @@ def evaluate_model(model, test_loader, device, test_only=False, prediction_path=
                 ]
                 all_image_ids.extend(image_ids)
                 if not test_only:
-                    all_labels.extend(labels.numpy())
+                    all_labels.extend(labels.cpu().numpy())
             else:
                 # dual images case
                 for k in range(2):
@@ -295,7 +316,7 @@ def evaluate_model(model, test_loader, device, test_only=False, prediction_path=
                     ]
                     all_image_ids.extend(image_ids)
                     if not test_only:
-                        all_labels.extend(labels.numpy())
+                        all_labels.extend(labels.cpu().numpy())
 
             pbar.update(1)
 
@@ -309,7 +330,8 @@ def evaluate_model(model, test_loader, device, test_only=False, prediction_path=
         print(f'[Test] Save predictions to {os.path.abspath(prediction_path)}')
     else:
         metrics = compute_metrics(all_preds, all_labels)
-        return metrics
+        val_epoch_loss = sum(running_val_loss) / len(running_val_loss) if running_val_loss else None
+        return (*metrics, val_epoch_loss)
 
 
 def compute_metrics(preds, labels, per_class=False):
@@ -326,6 +348,33 @@ def compute_metrics(preds, labels, per_class=False):
 
     return kappa, accuracy, precision, recall
 
+def visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies):
+    epochs = range(1, len(train_losses) + 1)
+
+    # visualize loss
+    plt.figure(figsize=(12, 6))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, train_losses, 'b-o', label='Training Loss')
+    plt.plot(epochs, val_losses, 'r-o', label='Validation Loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+
+    # visualize accuracy
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, train_accuracies, 'b-o', label='Training Accuracy')
+    plt.plot(epochs, val_accuracies, 'r-o', label='Validation Accuracy')
+    plt.title('Training and Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.grid(True)
+
+    plt.savefig('./loss_and_accuracy.png')
+    plt.tight_layout()
+    plt.show()
 
 class MyModel(nn.Module):
     def __init__(self, num_classes=5, dropout_rate=0.5):
@@ -414,7 +463,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
 
     # Use GPU device is possible
-    device = torch.device('mps')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('Device:', device)
 
     # Move class weights to the device
@@ -432,7 +481,7 @@ if __name__ == '__main__':
     )
 
     # Load the pretrained checkpoint
-    state_dict = torch.load('./model_1.pth', map_location='cpu')
+    state_dict = torch.load('./model_1.pth', map_location='cpu', weights_only=True)
     model.load_state_dict(state_dict, strict=True)
 
     # Make predictions on testing set and save the prediction results
