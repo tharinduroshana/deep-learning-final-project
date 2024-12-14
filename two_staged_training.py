@@ -79,6 +79,10 @@ class SecondStageModel(nn.Module):
         x = self.fc(x)
         return x
 
+    def load_pretrained_backbone(self, path):
+        pretrained_state_dict = torch.load(path)
+        self.backbone.load_state_dict(pretrained_state_dict)
+
 class SecondStageModel1(nn.Module):
     def __init__(self, num_classes=5, dropout_rate=0.5):
         super().__init__()
