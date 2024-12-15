@@ -1,0 +1,56 @@
+if __name__ == '__main__':
+    # Use GPU device is possible
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print('Device:', device)
+
+    # Stacking
+    # Generate and save test predictions
+    # val_dataset = PatientLevelRetinopathyDataset('./DeepDRiD/val.csv', './DeepDRiD/val/', transform_test)
+    # test_dataset = PatientLevelRetinopathyDataset('./DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, test=True)
+    #
+    # val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    # test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    #
+    # saved_models = load_saved_models(num_classes, device)
+    # trained_stack_ensemble = get_trained_stack_ensemble(saved_models, val_loader, device)
+    # test_stack_ensemble(trained_stack_ensemble, saved_models, test_loader, device, test_only=True)
+
+    # Using training dataset to train the ensemble model can cause over fitting as it is already used at individual models level
+    # Test dataset is not labeled, therefore, cannot measure any metrics
+    # So we have two ways:
+    # 1. Use validation set with data augmentation
+    # 2. K-Fold with validation data
+
+    # Data augmentation
+    train_dataset = PatientLevelRetinopathyDataset('../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_train)
+    val_dataset = PatientLevelRetinopathyDataset('../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_test)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+    saved_models = load_saved_models(num_classes, device)
+    trained_stack_ensemble = get_trained_stack_ensemble(saved_models, train_loader, device)
+    test_stack_ensemble(trained_stack_ensemble, saved_models, val_loader, device, test_only=False)
+
+    # K-Fold
+    # k_folds = 5
+    # kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
+    #
+    # saved_models = load_saved_models(num_classes, device)
+    # val_dataset = PatientLevelRetinopathyDataset('./DeepDRiD/val.csv', './DeepDRiD/val/', transform_test)
+    # for fold, (train_indices, val_indices) in enumerate(kf.split(val_dataset)):
+    #     print(f"Fold {fold + 1}/{k_folds}")
+    #
+    #     # Create train and validation subsets
+    #     train_subset = Subset(val_dataset, train_indices)
+    #     val_subset = Subset(val_dataset, val_indices)
+    #
+    #     # Create DataLoaders
+    #     train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
+    #     val_loader = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
+    #
+    #     # Train models or ensemble using this fold's training data
+    #     trained_stack_ensemble = get_trained_stack_ensemble(saved_models, train_loader, device)
+    #
+    #     # Evaluate using this fold's validation data
+    #     test_stack_ensemble(trained_stack_ensemble, saved_models, val_loader, device)
