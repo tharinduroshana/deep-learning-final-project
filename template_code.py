@@ -308,7 +308,7 @@ def evaluate_model(model, test_loader, device, criterion=None, test_only=False, 
                     all_labels.extend(labels.cpu().numpy())
             else:
                 # dual images case
-                for k in range(2):
+                for k in range(len(images)):
                     all_preds.extend(preds.cpu().numpy())
                     image_ids = [
                         os.path.basename(test_loader.dataset.data[idx][f'img_path{k + 1}']) for idx in
