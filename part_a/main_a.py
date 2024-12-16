@@ -243,17 +243,21 @@ if __name__ == '__main__':
     mode = 'single'  # forward single image to the model each time
     # mode = 'dual'  # forward two images of the same eye to the model and fuse the features
 
-    model_type = 'densenet121'
-    # model_type = 'efficientnet_b0'
+    # model_type = 'resnet18'
     # model_type = 'resnet34'
+    # model_type = 'vgg'
+    # model_type = 'efficientnet_b0'
+    model_type = 'densenet121'
 
     assert mode in ('single', 'dual')
-    assert model_type in ('densenet121', 'efficientnet_b0', 'resnet34')
+    assert model_type in ('resnet18', 'resnet34', 'vgg', 'efficientnet_b0', 'densenet121')
 
     pre_trained_models = {
-        "densenet121": models.densenet121(pretrained=True),
-        "efficientnet_b0": models.efficientnet_b0(pretrained=True),
+        "resnet18": models.resnet18(pretrained=True),
         "resnet34": models.resnet34(pretrained=True),
+        "vgg": models.vgg16(pretrained=True),
+        "efficientnet_b0": models.efficientnet_b0(pretrained=True),
+        "densenet121": models.densenet121(pretrained=True),
     }
 
     # Define the model
