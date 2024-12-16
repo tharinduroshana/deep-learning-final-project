@@ -225,11 +225,11 @@ def train_first_stage_model(model_type: str):
     print(model_type)
     first_stage_model = FirstStageModel(model_type=model_type)
 
-    train_dataset = APTOS2019Dataset('./APTOS2019/train_1.csv', './APTOS2019/train_images/train_images/',
+    train_dataset = APTOS2019Dataset('../APTOS2019/train_1.csv', '../APTOS2019/train_images/train_images/',
                                      transform_train)
-    val_dataset = APTOS2019Dataset('./APTOS2019/valid.csv', './APTOS2019/val_images/val_images/',
+    val_dataset = APTOS2019Dataset('../APTOS2019/valid.csv', '../APTOS2019/val_images/val_images/',
                                    transform_test)
-    test_dataset = APTOS2019Dataset('./APTOS2019/test.csv', './APTOS2019/test_images/test_images/',
+    test_dataset = APTOS2019Dataset('../APTOS2019/test.csv', '../APTOS2019/test_images/test_images/',
                                     transform_test, test=True)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
