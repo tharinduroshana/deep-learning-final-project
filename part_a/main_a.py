@@ -2,17 +2,16 @@ import os
 import random
 import sys
 
-import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from PIL import Image
 from sklearn.metrics import cohen_kappa_score, precision_score, recall_score, accuracy_score
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torchvision import models, transforms
 from torchvision.transforms.functional import to_pil_image
 from tqdm import tqdm
 
+from part_a.dataset import RetinopathyDataset
 from part_a.dual_image_model import DualImageModel
 from part_a.single_image_model import SingleImageModel
 from part_e.visualizations import visualize_losses_and_accuracies
@@ -22,119 +21,6 @@ batch_size = 24
 num_classes = 5  # 5 DR levels
 learning_rate = 0.0001
 num_epochs = 20
-
-
-class RetinopathyDataset(Dataset):
-    def __init__(self, ann_file, image_dir, transform=None, mode='single', test=False):
-        self.ann_file = ann_file
-        self.image_dir = image_dir
-        self.transform = transform
-
-        self.test = test
-        self.mode = mode
-
-        if self.mode == 'single':
-            self.data = self.load_data()
-        else:
-            self.data = self.load_data_dual()
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, index):
-        if self.mode == 'single':
-            return self.get_item(index)
-        else:
-            return self.get_item_dual(index)
-
-    # 1. single image
-    def load_data(self):
-        df = pd.read_csv(self.ann_file)
-
-        data = []
-        for _, row in df.iterrows():
-            file_info = dict()
-            file_info['img_path'] = os.path.join(self.image_dir, row['img_path'])
-            if not self.test:
-                file_info['dr_level'] = int(row['patient_DR_Level'])
-            data.append(file_info)
-        return data
-
-    def get_item(self, index):
-        data = self.data[index]
-        img = Image.open(data['img_path']).convert('RGB')
-        if self.transform:
-            img = self.transform(img)
-
-        if not self.test:
-            label = torch.tensor(data['dr_level'], dtype=torch.int64)
-            return img, label
-        else:
-            return img
-
-    # 2. dual image
-    def load_data_dual(self):
-        df = pd.read_csv(self.ann_file)
-
-        df['prefix'] = df['image_id'].str.split('_').str[0]  # The patient id of each image
-        df['suffix'] = df['image_id'].str.split('_').str[1].str[0]  # The left or right eye
-        grouped = df.groupby(['prefix', 'suffix'])
-
-        data = []
-        for (prefix, suffix), group in grouped:
-            file_info = dict()
-            file_info['img_path1'] = os.path.join(self.image_dir, group.iloc[0]['img_path'])
-            file_info['img_path2'] = os.path.join(self.image_dir, group.iloc[1]['img_path'])
-            if not self.test:
-                file_info['dr_level'] = int(group.iloc[0]['patient_DR_Level'])
-            data.append(file_info)
-        return data
-
-    def get_item_dual(self, index):
-        data = self.data[index]
-        img1 = Image.open(data['img_path1']).convert('RGB')
-        img2 = Image.open(data['img_path2']).convert('RGB')
-
-        if self.transform:
-            img1 = self.transform(img1)
-            img2 = self.transform(img2)
-
-        if not self.test:
-            label = torch.tensor(data['dr_level'], dtype=torch.int64)
-            return [img1, img2], label
-        else:
-            return [img1, img2]
-
-
-class CutOut(object):
-    def __init__(self, mask_size, p=0.5):
-        self.mask_size = mask_size
-        self.p = p
-
-    def __call__(self, img):
-        if np.random.rand() > self.p:
-            return img
-
-        # Ensure the image is a tensor
-        if not isinstance(img, torch.Tensor):
-            raise TypeError('Input image must be a torch.Tensor')
-
-        # Get height and width of the image
-        h, w = img.shape[1], img.shape[2]
-        mask_size_half = self.mask_size // 2
-        offset = 1 if self.mask_size % 2 == 0 else 0
-
-        cx = np.random.randint(mask_size_half, w + offset - mask_size_half)
-        cy = np.random.randint(mask_size_half, h + offset - mask_size_half)
-
-        xmin, xmax = cx - mask_size_half, cx + mask_size_half + offset
-        ymin, ymax = cy - mask_size_half, cy + mask_size_half + offset
-        xmin, xmax = max(0, xmin), min(w, xmax)
-        ymin, ymax = max(0, ymin), min(h, ymax)
-
-        img[:, ymin:ymax, xmin:xmax] = 0
-        return img
-
 
 class SLORandomPad:
     def __init__(self, size):
@@ -310,7 +196,7 @@ def evaluate_model(model, test_loader, device, criterion=None, test_only=False, 
                     all_labels.extend(labels.cpu().numpy())
             else:
                 # dual images case
-                for k in range(len(images)):
+                for k in range(2):
                     all_preds.extend(preds.cpu().numpy())
                     image_ids = [
                         os.path.basename(test_loader.dataset.data[idx][f'img_path{k + 1}']) for idx in
@@ -384,9 +270,9 @@ if __name__ == '__main__':
     print('Device:', device)
 
     # Create datasets
-    train_dataset = RetinopathyDataset('./DeepDRiD/train.csv', './DeepDRiD/train/', transform_train, mode)
-    val_dataset = RetinopathyDataset('./DeepDRiD/val.csv', './DeepDRiD/val/', transform_test, mode)
-    test_dataset = RetinopathyDataset('./DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, mode, test=True)
+    train_dataset = RetinopathyDataset('../DeepDRiD/train.csv', '../DeepDRiD/train/', transform_train, mode)
+    val_dataset = RetinopathyDataset('../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_test, mode)
+    test_dataset = RetinopathyDataset('../DeepDRiD/test.csv', '../DeepDRiD/test/', transform_test, mode, test=True)
 
     # Create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
