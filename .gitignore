@@ -5,4 +5,4 @@
 __pycache__/
 *.pth
 *.png
-/part_a/test_predictions.csv
+/part_a/outputs/test_predictions.csv

@@ -8,12 +8,8 @@ import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 
-from template_code import transform_train, transform_test, train_model, evaluate_model, RetinopathyDataset
-
-batch_size = 24
-num_classes = 5  # 5 DR levels
-learning_rate = 0.0001
-num_epochs = 20
+from shared.shared import transform_train, transform_test, train_model, evaluate_model, RetinopathyDataset, \
+    select_device, batch_size, learning_rate, num_epochs
 
 MODEL_TYPES = {
     "VGG16": models.vgg16,
@@ -243,7 +239,7 @@ def train_first_stage_model(model_type: str):
     criterion = nn.CrossEntropyLoss()
 
     # Use GPU device is possible
-    device = torch.device('mps')
+    device = select_device()
     print('Device:', device)
 
     # Move class weights to the device
@@ -275,13 +271,13 @@ def train_second_stage_model(model_type, training_mode):
     model = SecondStageModel(model_type=model_type, training_mode=training_mode)
 
     if training_mode == TrainingModes.STANDARD.value:
-        train_dataset = RetinopathyDataset('./DeepDRiD/train.csv', './DeepDRiD/train/', transform_train)
-        val_dataset = RetinopathyDataset('./DeepDRiD/val.csv', './DeepDRiD/val/', transform_test)
-        test_dataset = RetinopathyDataset('./DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, test=True)
+        train_dataset = RetinopathyDataset('../DeepDRiD/train.csv', './DeepDRiD/train/', transform_train)
+        val_dataset = RetinopathyDataset('../DeepDRiD/val.csv', './DeepDRiD/val/', transform_test)
+        test_dataset = RetinopathyDataset('../DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, test=True)
     else:
-        train_dataset = RetinopathyDatasetPatientLevel('./DeepDRiD/train.csv', './DeepDRiD/train/', transform_train)
-        val_dataset = RetinopathyDatasetPatientLevel('./DeepDRiD/val.csv', './DeepDRiD/val/', transform_test)
-        test_dataset = RetinopathyDatasetPatientLevel('./DeepDRiD/test.csv', './DeepDRiD/test/', transform_test,
+        train_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/train.csv', './DeepDRiD/train/', transform_train)
+        val_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/val.csv', './DeepDRiD/val/', transform_test)
+        test_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/test.csv', './DeepDRiD/test/', transform_test,
                                                       test=True)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -291,7 +287,7 @@ def train_second_stage_model(model_type, training_mode):
     criterion = nn.CrossEntropyLoss()
 
     # Use GPU device is possible
-    device = torch.device('mps')
+    device = select_device()
     print('Device:', device)
 
     # Move class weights to the device

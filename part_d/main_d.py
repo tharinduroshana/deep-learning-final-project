@@ -13,10 +13,8 @@ from part_d.ensemble_techniques.weighted_average import weighted_average_ensembl
 from part_d.dataset import PatientLevelRetinopathyDataset
 from part_d.image_pre_processing.image_pre_processing import ben_graham_preprocessing, circle_cropping, \
     clahe_preprocessing, gaussian_blur, sharpen_image
-from template_code import transform_test, transform_train
+from shared.shared import transform_test, transform_train, select_device, batch_size, num_classes
 
-batch_size = 24
-num_classes = 5
 
 def load_saved_models(num_classes, device):
     saved_models = {
@@ -56,7 +54,7 @@ def validate_ensemble(final_predictions, val_loader):
 
 if __name__ == '__main__':
     # Use GPU device is possible
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = select_device()
     print('Device:', device)
 
     saved_models = load_saved_models(num_classes, device)

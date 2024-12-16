@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 
 
-def visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies):
+def visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies, output_path='./loss_and_accuracy.png'):
     epochs = range(1, len(train_losses) + 1)
 
     # visualize loss
@@ -25,6 +25,6 @@ def visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, 
     plt.legend()
     plt.grid(True)
 
-    plt.savefig('./loss_and_accuracy.png')
+    plt.savefig(output_path)
     plt.tight_layout()
     plt.show()

@@ -5,16 +5,13 @@ import sys
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
 from PIL import Image
 from sklearn.metrics import cohen_kappa_score, precision_score, recall_score, accuracy_score
-from torch.utils.data import Dataset, DataLoader
-from torchvision import models, transforms
+from torch.utils.data import Dataset
+from torchvision import transforms
 from torchvision.transforms.functional import to_pil_image
 from tqdm import tqdm
 
-from part_a.dual_image_model import DualImageModel
-from part_a.single_image_model import SingleImageModel
 from part_e.visualizations import visualize_losses_and_accuracies
 
 # Hyper Parameters
@@ -180,9 +177,14 @@ transform_test = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
+def select_device():
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    else:
+        return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def train_model(model, train_loader, val_loader, device, criterion, optimizer, lr_scheduler, num_epochs=25,
-                checkpoint_path='model.pth'):
+                checkpoint_path='model.pth', visualizations_save_path='./loss_and_accuracy.png'):
     best_model = model.state_dict()
     best_epoch = None
     best_val_kappa = -1.0  # Initialize the best kappa score
@@ -263,7 +265,7 @@ def train_model(model, train_loader, val_loader, device, criterion, optimizer, l
 
     print(f'[Val] Best kappa: {best_val_kappa:.4f}, Epoch {best_epoch}')
 
-    visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies)
+    visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies, output_path=visualizations_save_path)
 
     return model
 
@@ -349,74 +351,3 @@ def compute_metrics(preds, labels, per_class=False):
         return kappa, accuracy, precision, recall, precision_per_class, recall_per_class
 
     return kappa, accuracy, precision, recall
-
-if __name__ == '__main__':
-    # Choose between 'single image' and 'dual images' pipeline
-    # This will affect the model definition, dataset pipeline, training and evaluation
-
-    mode = 'single'  # forward single image to the model each time
-    # mode = 'dual'  # forward two images of the same eye to the model and fuse the features
-
-    # model_type = 'resnet18'
-    # model_type = 'resnet34'
-    # model_type = 'vgg'
-    # model_type = 'efficientnet_b0'
-    model_type = 'densenet121'
-
-    assert mode in ('single', 'dual')
-    assert model_type in ('resnet18', 'resnet34', 'vgg', 'efficientnet_b0', 'densenet121')
-
-    pre_trained_models = {
-        "resnet18": models.resnet18(pretrained=True),
-        "resnet34": models.resnet34(pretrained=True),
-        "vgg": models.vgg16(pretrained=True),
-        "efficientnet_b0": models.efficientnet_b0(pretrained=True),
-        "densenet121": models.densenet121(pretrained=True),
-    }
-
-    # Define the model
-    if mode == 'single':
-        model = SingleImageModel(pre_trained_models[model_type])
-    else:
-        model = DualImageModel(pre_trained_models[model_type])
-
-    print(model, '\n')
-    print('Pipeline Mode:', mode)
-
-    # Use GPU device is possible
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print('Device:', device)
-
-    # Create datasets
-    train_dataset = RetinopathyDataset('./DeepDRiD/train.csv', './DeepDRiD/train/', transform_train, mode)
-    val_dataset = RetinopathyDataset('./DeepDRiD/val.csv', './DeepDRiD/val/', transform_test, mode)
-    test_dataset = RetinopathyDataset('./DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, mode, test=True)
-
-    # Create dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-    # Move class weights to the device
-    model = model.to(device)
-
-    # Optimizer and Learning rate scheduler
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
-
-    # Define the weighted CrossEntropyLoss
-    criterion = nn.CrossEntropyLoss()
-
-    # Train and evaluate the model with the training and validation set
-    model = train_model(
-        model, train_loader, val_loader, device, criterion, optimizer,
-        lr_scheduler=lr_scheduler, num_epochs=num_epochs,
-        checkpoint_path='./model_1.pth'
-    )
-
-    # Load the pretrained checkpoint
-    state_dict = torch.load('./model_1.pth', map_location='cpu', weights_only=True)
-    model.load_state_dict(state_dict, strict=True)
-
-    # Make predictions on testing set and save the prediction results
-    evaluate_model(model, test_loader, device, test_only=True)
