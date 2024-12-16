@@ -4,13 +4,13 @@ from sklearn.metrics import accuracy_score, cohen_kappa_score
 from torch.utils.data import DataLoader
 from torchvision import models
 
-from ensemble_techniques.bagging import bagging_ensemble
-from ensemble_techniques.boosting import boosting_ensemble
-from ensemble_techniques.max_voting import max_voting_ensemble
-from ensemble_techniques.stacking import stacking_ensemble
-from ensemble_techniques.weighted_average import weighted_average_ensemble
-from patient_level_retinopthy_dataset import PatientLevelRetinopathyDataset
-from second_stage_model import SecondStageModel
+from part_d.ensemble_techniques.bagging import bagging_ensemble
+from part_d.ensemble_techniques.boosting import boosting_ensemble
+from part_d.ensemble_techniques.max_voting import max_voting_ensemble
+from part_d.ensemble_techniques.stacking import stacking_ensemble
+from part_d.ensemble_techniques.weighted_average import weighted_average_ensemble
+from part_d.ensemble_techniques.dataset import PatientLevelRetinopathyDataset
+from model import SecondStageModel
 from template_code import transform_test, transform_train
 
 batch_size = 24
@@ -58,8 +58,8 @@ if __name__ == '__main__':
     print('Device:', device)
     print('Evaluating Ensemble Techniques:\n')
 
-    train_dataset = PatientLevelRetinopathyDataset('../DeepDRiD/train.csv', '../DeepDRiD/train/', transform_train)
-    val_dataset = PatientLevelRetinopathyDataset('../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_test)
+    train_dataset = PatientLevelRetinopathyDataset('../../DeepDRiD/train.csv', '../../DeepDRiD/train/', transform_train)
+    val_dataset = PatientLevelRetinopathyDataset('../../DeepDRiD/val.csv', '../../DeepDRiD/val/', transform_test)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 

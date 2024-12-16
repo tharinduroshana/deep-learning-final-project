@@ -9,9 +9,7 @@ class PatientLevelRetinopathyDataset(Dataset):
         self.ann_file = ann_file
         self.image_dir = image_dir
         self.transform = transform
-
         self.test = test
-
         self.data = self.load_data()
 
     def __len__(self):
@@ -23,8 +21,7 @@ class PatientLevelRetinopathyDataset(Dataset):
     def load_data(self):
         df = pd.read_csv(self.ann_file)
 
-        df['prefix'] = df['image_id'].str.split('_').str[0]  # The patient id of each image
-        # df['suffix'] = df['image_id'].str.split('_').str[1].str[0]  # The left or right eye
+        df['prefix'] = df['image_id'].str.split('_').str[0]
         grouped = df.groupby(['prefix'])
 
         data = []
