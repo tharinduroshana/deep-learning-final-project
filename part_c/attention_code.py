@@ -8,12 +8,8 @@ import torch.nn.functional as F
 
 from enum import Enum
 
-from template_code import RetinopathyDataset, transform_train, transform_test, train_model, evaluate_model
-
-batch_size = 24
-num_classes = 5
-learning_rate = 0.0001
-num_epochs = 20
+from shared.shared import RetinopathyDataset, transform_train, transform_test, train_model, evaluate_model, \
+    select_device, batch_size, num_epochs, learning_rate
 
 TRAINING_MODE = 'dual'
 
@@ -216,9 +212,9 @@ if __name__ == '__main__':
     print('Pipeline Mode:', mode)
 
     # Create datasets
-    train_dataset = RetinopathyDataset('./DeepDRiD/train.csv', './DeepDRiD/train/', transform_train, mode)
-    val_dataset = RetinopathyDataset('./DeepDRiD/val.csv', './DeepDRiD/val/', transform_test, mode)
-    test_dataset = RetinopathyDataset('./DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, mode, test=True)
+    train_dataset = RetinopathyDataset('../DeepDRiD/train.csv', './DeepDRiD/train/', transform_train, mode)
+    val_dataset = RetinopathyDataset('../DeepDRiD/val.csv', './DeepDRiD/val/', transform_test, mode)
+    test_dataset = RetinopathyDataset('../DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, mode, test=True)
 
     # Create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -229,7 +225,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
 
     # Use GPU device is possible
-    device = torch.device('mps')
+    device = select_device()
     print('Device:', device)
 
     # Move class weights to the device

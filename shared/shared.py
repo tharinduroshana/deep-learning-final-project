@@ -1,4 +1,3 @@
-import copy
 import os
 import random
 import sys
@@ -6,14 +5,14 @@ import sys
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
-import matplotlib.pyplot as plt
 from PIL import Image
 from sklearn.metrics import cohen_kappa_score, precision_score, recall_score, accuracy_score
-from torch.utils.data import Dataset, DataLoader
-from torchvision import models, transforms
+from torch.utils.data import Dataset
+from torchvision import transforms
 from torchvision.transforms.functional import to_pil_image
 from tqdm import tqdm
+
+from part_e.visualizations import visualize_losses_and_accuracies
 
 # Hyper Parameters
 batch_size = 24
@@ -178,9 +177,14 @@ transform_test = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
+def select_device():
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    else:
+        return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def train_model(model, train_loader, val_loader, device, criterion, optimizer, lr_scheduler, num_epochs=25,
-                checkpoint_path='model.pth'):
+                checkpoint_path='model.pth', visualizations_save_path='./loss_and_accuracy.png'):
     best_model = model.state_dict()
     best_epoch = None
     best_val_kappa = -1.0  # Initialize the best kappa score
@@ -261,7 +265,7 @@ def train_model(model, train_loader, val_loader, device, criterion, optimizer, l
 
     print(f'[Val] Best kappa: {best_val_kappa:.4f}, Epoch {best_epoch}')
 
-    visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies)
+    visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies, output_path=visualizations_save_path)
 
     return model
 
@@ -347,142 +351,3 @@ def compute_metrics(preds, labels, per_class=False):
         return kappa, accuracy, precision, recall, precision_per_class, recall_per_class
 
     return kappa, accuracy, precision, recall
-
-def visualize_losses_and_accuracies(train_losses, val_losses, train_accuracies, val_accuracies):
-    epochs = range(1, len(train_losses) + 1)
-
-    # visualize loss
-    plt.figure(figsize=(12, 6))
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs, train_losses, 'b-o', label='Training Loss')
-    plt.plot(epochs, val_losses, 'r-o', label='Validation Loss')
-    plt.title('Training and Validation Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.grid(True)
-
-    # visualize accuracy
-    plt.subplot(1, 2, 2)
-    plt.plot(epochs, train_accuracies, 'b-o', label='Training Accuracy')
-    plt.plot(epochs, val_accuracies, 'r-o', label='Validation Accuracy')
-    plt.title('Training and Validation Accuracy')
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy')
-    plt.legend()
-    plt.grid(True)
-
-    plt.savefig('./loss_and_accuracy.png')
-    plt.tight_layout()
-    plt.show()
-
-class MyModel(nn.Module):
-    def __init__(self, num_classes=5, dropout_rate=0.5):
-        super().__init__()
-
-        self.backbone = models.densenet121(pretrained=True)
-        self.backbone.fc = nn.Identity()  # Remove the original classification layer
-
-        self.fc = nn.Sequential(
-            nn.Linear(1000, 256),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-            nn.Linear(256, 128),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-            nn.Linear(128, num_classes)
-        )
-
-    def forward(self, x):
-        x = self.backbone(x)
-        x = self.fc(x)
-        return x
-
-
-class MyDualModel(nn.Module):
-    def __init__(self, num_classes=5, dropout_rate=0.5):
-        super().__init__()
-
-        backbone = models.resnet18(pretrained=True)
-        backbone.fc = nn.Identity()
-
-        # Here the two backbones will have the same structure but unshared weights
-        self.backbone1 = copy.deepcopy(backbone)
-        self.backbone2 = copy.deepcopy(backbone)
-
-        self.fc = nn.Sequential(
-            nn.Linear(512 * 2, 256),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-            nn.Linear(256, 128),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_rate),
-            nn.Linear(128, num_classes)
-        )
-
-    def forward(self, images):
-        image1, image2 = images
-
-        x1 = self.backbone1(image1)
-        x2 = self.backbone2(image2)
-
-        x = torch.cat((x1, x2), dim=1)
-        x = self.fc(x)
-        return x
-
-
-if __name__ == '__main__':
-    # Choose between 'single image' and 'dual images' pipeline
-    # This will affect the model definition, dataset pipeline, training and evaluation
-
-    mode = 'single'  # forward single image to the model each time
-    # mode = 'dual'  # forward two images of the same eye to the model and fuse the features
-
-    assert mode in ('single', 'dual')
-
-    # Define the model
-    if mode == 'single':
-        model = MyModel()
-    else:
-        model = MyDualModel()
-
-    print(model, '\n')
-    print('Pipeline Mode:', mode)
-
-    # Create datasets
-    train_dataset = RetinopathyDataset('./DeepDRiD/train.csv', './DeepDRiD/train/', transform_train, mode)
-    val_dataset = RetinopathyDataset('./DeepDRiD/val.csv', './DeepDRiD/val/', transform_test, mode)
-    test_dataset = RetinopathyDataset('./DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, mode, test=True)
-
-    # Create dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-    # Define the weighted CrossEntropyLoss
-    criterion = nn.CrossEntropyLoss()
-
-    # Use GPU device is possible
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print('Device:', device)
-
-    # Move class weights to the device
-    model = model.to(device)
-
-    # Optimizer and Learning rate scheduler
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
-
-    # Train and evaluate the model with the training and validation set
-    model = train_model(
-        model, train_loader, val_loader, device, criterion, optimizer,
-        lr_scheduler=lr_scheduler, num_epochs=num_epochs,
-        checkpoint_path='./model_1.pth'
-    )
-
-    # Load the pretrained checkpoint
-    state_dict = torch.load('./model_1.pth', map_location='cpu', weights_only=True)
-    model.load_state_dict(state_dict, strict=True)
-
-    # Make predictions on testing set and save the prediction results
-    evaluate_model(model, test_loader, device, test_only=True)
