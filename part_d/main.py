@@ -7,10 +7,10 @@ from torchvision import models
 from part_d.ensemble_techniques.bagging import bagging_ensemble
 from part_d.ensemble_techniques.boosting import boosting_ensemble
 from part_d.ensemble_techniques.max_voting import max_voting_ensemble
-from part_d.ensemble_techniques.model import SecondStageModel
+from part_d.model import SecondStageModel
 from part_d.ensemble_techniques.stacking import stacking_ensemble
 from part_d.ensemble_techniques.weighted_average import weighted_average_ensemble
-from part_d.image_pre_processing.dataset import PatientLevelRetinopathyDataset
+from part_d.dataset import PatientLevelRetinopathyDataset
 from part_d.image_pre_processing.image_pre_processing import ben_graham_preprocessing, circle_cropping, \
     clahe_preprocessing, gaussian_blur, sharpen_image
 from template_code import transform_test, transform_train
@@ -32,15 +32,15 @@ def load_saved_models(num_classes, device):
     }
 
     model_densenet121 = SecondStageModel(saved_models["densenet121"], in_features["densenet121"], num_classes=num_classes).to(device)
-    state_dict = torch.load('../saved_models/densenet121.pth', map_location=device, weights_only=True)
+    state_dict = torch.load('saved_models/densenet121.pth', map_location=device, weights_only=True)
     model_densenet121.load_state_dict(state_dict, strict=True)
 
     model_efficientnet_b0 = SecondStageModel(saved_models["efficientnet_b0"], in_features["efficientnet_b0"], num_classes=num_classes).to(device)
-    state_dict = torch.load('../saved_models/efficientnet_b0.pth', map_location=device, weights_only=True)
+    state_dict = torch.load('saved_models/efficientnet_b0.pth', map_location=device, weights_only=True)
     model_efficientnet_b0.load_state_dict(state_dict, strict=True)
 
     model_resnet34 = SecondStageModel(saved_models["resnet34"], in_features["resnet34"], num_classes=num_classes).to(device)
-    state_dict = torch.load('../saved_models/resnet34.pth', map_location=device, weights_only=True)
+    state_dict = torch.load('saved_models/resnet34.pth', map_location=device, weights_only=True)
     model_resnet34.load_state_dict(state_dict, strict=True)
 
     return [model_densenet121, model_efficientnet_b0, model_resnet34]
@@ -58,16 +58,11 @@ if __name__ == '__main__':
     # Use GPU device is possible
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('Device:', device)
-    print('Evaluating Ensemble Techniques:\n')
-
-    train_dataset = PatientLevelRetinopathyDataset('../../DeepDRiD/train.csv', '../DeepDRiD/train/', transform_train)
-    val_dataset = PatientLevelRetinopathyDataset('../../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_test)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     saved_models = load_saved_models(num_classes, device)
 
     preprocessing_pipelines = {
+        "none": None,
         "ben_graham": [ben_graham_preprocessing],
         "circle_cropping": [circle_cropping],
         "clahe": [clahe_preprocessing],
@@ -78,8 +73,8 @@ if __name__ == '__main__':
     for name, preprocess_funcs in preprocessing_pipelines.items():
         print(f"Evaluating Ensemble Techniques with Preprocessing: {name}\n")
 
-        train_dataset = PatientLevelRetinopathyDataset('../../DeepDRiD/train.csv', '../../DeepDRiD/train/', transform_train, preprocess_funcs)
-        val_dataset = PatientLevelRetinopathyDataset('../../DeepDRiD/val.csv', '../../DeepDRiD/val/', transform_test, preprocess_funcs)
+        train_dataset = PatientLevelRetinopathyDataset('../DeepDRiD/train.csv', '../DeepDRiD/train/', transform_train, preprocess_funcs)
+        val_dataset = PatientLevelRetinopathyDataset('../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_test, preprocess_funcs)
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
