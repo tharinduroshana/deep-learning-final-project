@@ -1,7 +1,7 @@
+import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision import models
 
 from part_a.dataset import RetinopathyDataset
 from part_a.dual_image_model import DualImageModel
@@ -25,21 +25,12 @@ if __name__ == '__main__':
     assert mode in ('single', 'dual')
     assert model_type in ('resnet18', 'resnet34', 'vgg', 'efficientnet_b0', 'densenet121')
 
-    pre_trained_models = {
-        "resnet18": models.resnet18(pretrained=True),
-        "resnet34": models.resnet34(pretrained=True),
-        "vgg": models.vgg16(pretrained=True),
-        "efficientnet_b0": models.efficientnet_b0(pretrained=True),
-        "densenet121": models.densenet121(pretrained=True),
-    }
-
     # Define the model
     if mode == 'single':
-        model = SingleImageModel(pre_trained_models[model_type])
+        model = SingleImageModel(model_type)
     else:
-        model = DualImageModel(pre_trained_models[model_type])
+        model = DualImageModel(model_type)
 
-    print(model, '\n')
     print('Pipeline Mode:', mode)
 
     # Use GPU device is possible
@@ -66,15 +57,19 @@ if __name__ == '__main__':
     # Define the weighted CrossEntropyLoss
     criterion = nn.CrossEntropyLoss()
 
+    checkpoint_dir = './outputs/'
+    os.makedirs(checkpoint_dir, exist_ok=True)
+
     # Train and evaluate the model with the training and validation set
     model = train_model(
         model, train_loader, val_loader, device, criterion, optimizer,
         lr_scheduler=lr_scheduler, num_epochs=num_epochs,
-        checkpoint_path='outputs/model_1.pth', visualizations_save_path='outputs/loss_and_accuracy.png'
+        checkpoint_path=f'outputs/{model_type.lower()}_{mode.lower()}_mode.pth',
+        visualizations_save_path=f'outputs/{model_type.lower()}_accuracy_and_loss.png'
     )
 
     # Load the pretrained checkpoint
-    state_dict = torch.load('outputs/model_1.pth', map_location='cpu', weights_only=True)
+    state_dict = torch.load(f'outputs/{model_type.lower()}_{mode.lower()}_mode.pth', map_location='cpu', weights_only=True)
     model.load_state_dict(state_dict, strict=True)
 
     # Make predictions on testing set and save the prediction results

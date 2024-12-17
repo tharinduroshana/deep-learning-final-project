@@ -254,7 +254,8 @@ def train_first_stage_model(model_type: str):
     first_stage_model = train_model(
         first_stage_model, train_loader, val_loader, device, criterion, optimizer,
         lr_scheduler=lr_scheduler, num_epochs=num_epochs,
-        checkpoint_path=f'.artifacts/task_b/{model_type.lower()}/first_stage_{model_type.lower()}.pth'
+        checkpoint_path=f'.artifacts/task_b/{model_type.lower()}/first_stage_{model_type.lower()}.pth',
+        visualizations_save_path=f'.artifacts/task_b/{model_type.lower()}/first_stage_{model_type.lower()}_acc_and_loss.png'
     )
 
     # Load the pretrained checkpoint
@@ -271,13 +272,13 @@ def train_second_stage_model(model_type, training_mode):
     model = SecondStageModel(model_type=model_type, training_mode=training_mode)
 
     if training_mode == TrainingModes.STANDARD.value:
-        train_dataset = RetinopathyDataset('../DeepDRiD/train.csv', './DeepDRiD/train/', transform_train)
-        val_dataset = RetinopathyDataset('../DeepDRiD/val.csv', './DeepDRiD/val/', transform_test)
-        test_dataset = RetinopathyDataset('../DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, test=True)
+        train_dataset = RetinopathyDataset('../DeepDRiD/train.csv', '../DeepDRiD/train/', transform_train)
+        val_dataset = RetinopathyDataset('../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_test)
+        test_dataset = RetinopathyDataset('../DeepDRiD/test.csv', '../DeepDRiD/test/', transform_test, test=True)
     else:
-        train_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/train.csv', './DeepDRiD/train/', transform_train)
-        val_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/val.csv', './DeepDRiD/val/', transform_test)
-        test_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/test.csv', './DeepDRiD/test/', transform_test,
+        train_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/train.csv', '../DeepDRiD/train/', transform_train)
+        val_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_test)
+        test_dataset = RetinopathyDatasetPatientLevel('../DeepDRiD/test.csv', '../DeepDRiD/test/', transform_test,
                                                       test=True)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -303,7 +304,8 @@ def train_second_stage_model(model_type, training_mode):
     model = train_model(
         model, train_loader, val_loader, device, criterion, optimizer,
         lr_scheduler=lr_scheduler, num_epochs=num_epochs,
-        checkpoint_path=f'.artifacts/task_b/{model_type.lower()}/{training_mode.lower()}/second_stage_{model_type.lower()}_{training_mode.lower()}.pth'
+        checkpoint_path=f'.artifacts/task_b/{model_type.lower()}/{training_mode.lower()}/second_stage_{model_type.lower()}_{training_mode.lower()}.pth',
+        visualizations_save_path=f'.artifacts/task_b/{model_type.lower()}/{training_mode.lower()}/second_stage_{model_type.lower()}_{training_mode.lower()}_acc_and_loss.png'
     )
 
     # Load the pretrained checkpoint

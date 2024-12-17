@@ -212,9 +212,9 @@ if __name__ == '__main__':
     print('Pipeline Mode:', mode)
 
     # Create datasets
-    train_dataset = RetinopathyDataset('../DeepDRiD/train.csv', './DeepDRiD/train/', transform_train, mode)
-    val_dataset = RetinopathyDataset('../DeepDRiD/val.csv', './DeepDRiD/val/', transform_test, mode)
-    test_dataset = RetinopathyDataset('../DeepDRiD/test.csv', './DeepDRiD/test/', transform_test, mode, test=True)
+    train_dataset = RetinopathyDataset('../DeepDRiD/train.csv', '../DeepDRiD/train/', transform_train, mode)
+    val_dataset = RetinopathyDataset('../DeepDRiD/val.csv', '../DeepDRiD/val/', transform_test, mode)
+    test_dataset = RetinopathyDataset('../DeepDRiD/test.csv', '../DeepDRiD/test/', transform_test, mode, test=True)
 
     # Create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -242,7 +242,8 @@ if __name__ == '__main__':
     model = train_model(
         model, train_loader, val_loader, device, criterion, optimizer,
         lr_scheduler=lr_scheduler, num_epochs=num_epochs,
-        checkpoint_path=f'.artifacts/task_c/densenet121/densenet121_{attention_mode.name.lower()}_attention.pth'
+        checkpoint_path=f'.artifacts/task_c/densenet121/densenet121_{attention_mode.name.lower()}_attention.pth',
+        visualizations_save_path=f'.artifacts/task_c/densenet121/densenet121_{attention_mode.name.lower()}_attention_acc_and_loss.png'
     )
 
     # Load the pretrained checkpoint
