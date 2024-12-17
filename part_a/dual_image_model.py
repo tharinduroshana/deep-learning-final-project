@@ -6,7 +6,7 @@ from torchvision import models
 pre_trained_models = {
         "resnet18": models.resnet18(pretrained=True),
         "resnet34": models.resnet34(pretrained=True),
-        "vgg": models.vgg16(pretrained=True),
+        "vgg16": models.vgg16(pretrained=True),
         "efficientnet_b0": models.efficientnet_b0(pretrained=True),
         "densenet121": models.densenet121(pretrained=True),
 }
