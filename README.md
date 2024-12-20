@@ -40,7 +40,6 @@ The folder structure should look like the following
 └── .gitignore
 ```
 
-
 ### part_a
 `part_a` contains the implementation for fine-tuning a pretrained model using the DeepDRiD dataset.
 
