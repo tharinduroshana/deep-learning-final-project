@@ -27,14 +27,14 @@ def boosting_ensemble(models, train_loader, val_loader, device, num_classes):
         incorrect = (pred_labels != train_labels).astype(int)
         weighted_error = np.sum(sample_weights * incorrect) / np.sum(sample_weights)
 
-        if weighted_error == 0:  # Perfect model
+        if weighted_error == 0:
             alpha = 1
         else:
             alpha = 0.5 * np.log((1 - weighted_error) / (weighted_error + 1e-10))
         model_weights.append(alpha)
 
         sample_weights *= np.exp(alpha * incorrect)
-        sample_weights /= np.sum(sample_weights)  # Normalize weights
+        sample_weights /= np.sum(sample_weights)
 
         with torch.no_grad():
             start_idx = 0
