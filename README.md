@@ -40,6 +40,13 @@ The folder structure should look like the following
 └── .gitignore
 ```
 
+### Environment setup
+Use the following commands to set up the conda environment and install the dependencies
+```
+conda env create -f environment.yml
+source activate DL24
+```
+
 ### part_a
 `part_a` contains the implementation for fine-tuning a pretrained model using the DeepDRiD dataset.
 
