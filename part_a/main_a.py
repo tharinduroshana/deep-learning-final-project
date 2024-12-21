@@ -18,12 +18,12 @@ if __name__ == '__main__':
 
     # model_type = 'resnet18'
     # model_type = 'resnet34'
-    # model_type = 'vgg'
+    # model_type = 'vgg16'
     # model_type = 'efficientnet_b0'
     model_type = 'densenet121'
 
     assert mode in ('single', 'dual')
-    assert model_type in ('resnet18', 'resnet34', 'vgg', 'efficientnet_b0', 'densenet121')
+    assert model_type in ('resnet18', 'resnet34', 'vgg16', 'efficientnet_b0', 'densenet121')
 
     # Define the model
     if mode == 'single':
