@@ -321,6 +321,7 @@ def train_second_stage_model(model_type, training_mode):
 if __name__ == '__main__':
     # Supported model types: VGG16, RESNET18, RESNET34, DENSENET121, EFFICIENTNET_B0
     model_type = "VGG16"
+    # training_mode = TrainingModes.PATIENT_LEVEL.value
     training_mode = TrainingModes.STANDARD.value
 
     train_first_stage_model(model_type=model_type)
