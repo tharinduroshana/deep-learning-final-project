@@ -5,6 +5,10 @@
 In this project we try to improve the performance of diabetic retinopathy detection using transfer learning by fine-tuning
 models and understanding the classification results with visualizations and explainable AI. 
 
+### Trained model files: 
+
+https://drive.google.com/drive/folders/1qvQiyx9bhaUq47RTJ4lMHkZfiSHStUmU?usp=drive_link
+
 
 ## Project Structure and Execution
 
