@@ -68,27 +68,28 @@ The folder structure should look like the following
 
 ### part_d
 `part_d` contains the implementations for ensemble learning techniques and image preprocessing techniques.
-Ensemble learning techniques and image preprocessing techniques are again grouped into their own folders inside `part_d`
-The dataset and the model frm `part_b` are copied into `part_d` folder to avoid impacting any other parts of the project if at any time those are changed during `part_d` implementation.
 
-`main_d.py` has the main function to execute and compare each of the ensemble techniques and image preprocessing techniques.
+Ensemble learning techniques (`stacking`, `boosting`, `weighted average`, `max voting`, `bagging`) and image preprocessing methods (`Ben Graham`, `Circle Cropping`, `CLAHE`, `Gaussian Blur`, `Sharpening`) are again grouped into their own folders inside `part_d`
 
-it supports two execution modes: (Selecting the needed `check_model_type` can be done by uncommenting the other one.)
-- `check_model_type = 'individual'`
-- `check_model_type = 'ensemble'`
+The dataset and the model from `part_b` are copied into `part_d` folder to avoid impacting any other parts of the project if at any time those are changed during `part_d` implementation.
 
-If executed with `individual`, it will try out all image preprocessing techniques with the base models used in ensemble learning.
-The results are printed on the console and at the end of the process, a line chart will visualize how the base models performed together with the image preprocessing techniques.
+- Navigate to part_d/ folder and Find part_d/main_d.py which is the executable file for part d.
+- You need to select the `check_model_type`. It could be `individual` or `ensemble`.
+  - `individual` will try out all image preprocessing techniques with the base models (weak learners) used for ensemble learning.
+  - `ensemble`, will try out all the image preprocessing techniques with the final ensemble learning models
+- Run the python file either using `python main_d.py` or using the IDE.
+- Output line plots should be saved to part_d/outputs folder
+  - Execution results are printed on the console during the execution and at the end of the process, a line plot will visualize how the models performed together with the image preprocessing techniques.
 
-If executed with `ensemble`, it will try out all the image preprocessing techniques with the final ensemble learning models. The results are again displayed similarly to the `individual` execution.
-
-`main_d_test_predictions.py` is not used to compare and validate different types of models, but only to generate final csv file to submit to Kraggle. 
+`main_d_test_predictions.py` is not used to compare and validate different types of models, but only to generate final csv file to submit to Kaggle. 
 Since by running `main_d.py` we already figured out `denseNet121` is the best performing model, here the idea is to try and optimize its output by using different image preprocessing pipelines. 
 
 eg: Gaussian Blur --> Circle Crop, Circle Crop --> Gaussian Blur --> Sharpen, etc
 
 ### part_e
-`part_e` contains the visualization mechanisms which are used by the other sections of the project. To execute Grad-CAM visualizations, follow the below steps.
+`part_e` contains the visualization mechanisms which are used by the other sections of the project. This includes `Loss and Accuracy Charts`, `Kappa Comparison for Ensemble Learning and Image Preprocessing` and `Grad-CAM` 
+
+To execute Grad-CAM visualizations, follow the below steps.
 
 - Navigate to part_e/ folder and Find part_e/gradcam_visualization.py which is the executable file for part e.
 - You need to select one from supported 5 `model_type`s. `resnet18`, `resnet34`, `vgg16`, `efficientnet_b0`, `densenet121`.

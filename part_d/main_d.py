@@ -124,7 +124,8 @@ if __name__ == '__main__':
         model_names.append('resnet34')
         all_kappas.append(resnet34_kappas)
 
-        visualize_kappa(pre_processing_methods, model_names, all_kappas, output_path='outputs/image_preprocessing_with_base_models.png')
+        color_options = ['b-o', 'g-o', 'r-o']
+        visualize_kappa(pre_processing_methods, model_names, all_kappas, color_options, output_path='outputs/image_preprocessing_with_base_models.png')
 
     if check_model_type == 'ensemble':
         pre_processing_methods = []
@@ -188,4 +189,5 @@ if __name__ == '__main__':
         model_names.append('bagging')
         all_kappas.append(bagging_kappas)
 
-        visualize_kappa(pre_processing_methods, model_names, all_kappas, output_path='outputs/image_preprocessing_with_ensemble_models.png')
+        color_options = ['b-o', 'g-o', 'r-o', 'm-o', 'k-o']
+        visualize_kappa(pre_processing_methods, model_names, all_kappas, color_options, output_path='outputs/image_preprocessing_with_ensemble_models.png')
