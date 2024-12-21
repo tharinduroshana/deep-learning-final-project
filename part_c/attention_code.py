@@ -205,7 +205,9 @@ class AttentionModes(Enum):
 
 if __name__ == '__main__':
     mode = TRAINING_MODE
-    attention_mode = AttentionModes.CHANNEL
+    # attention_mode = AttentionModes.SELF
+    # attention_mode = AttentionModes.CHANNEL
+    attention_mode = AttentionModes.SPATIAL
 
     model = attention_mode.value()
 
