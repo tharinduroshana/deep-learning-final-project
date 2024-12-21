@@ -238,26 +238,44 @@ def generate_gradcam_heatmap(model_name, model, training_mode, trained_model_pat
                          save_path=f'output/{model_name.lower()}_{training_mode.lower()}')
 
 
+def run_grandcam_generate_heatmap(model_type, mode, file_path):
+    if mode == "single":
+        model_class = SingleImageModel
+    elif mode == "dual":
+        model_class = DualImageModel
+    elif mode == "patient_level":
+        model_class = SecondStageModel
+
+    if mode == "patient_level":
+        model = model_class(model=model_type)
+    else:
+        model = model_class(model_type)
+    generate_gradcam_heatmap(model_type, model, mode, file_path)
+
+
 if __name__ == '__main__':
-    model = DualImageModel("resnet18")
-    generate_gradcam_heatmap("resnet18", model, "dual", '../trained_models_task_a/resnet18/dual/resnet13_dual.pth')
+    # model_type = "resnet18"
+    # mode = "single"
+    # file_path = "../trained_models_task_a/resnet18/single/resnet13.pth"
 
-    # model = DualImageModel("densenet121")
-    # generate_gradcam_heatmap("densenet121", model, "dual", './trained_models_task_a/densenet121/dual/densenet121_dual.pth')
+    model_type = "densenet121"
+    mode = "dual"
+    file_path = "../trained_models_task_a/densenet121/dual/densenet121_dual.pth"
 
-    # model = SingleImageModel("vgg16")
-    # generate_gradcam_heatmap("vgg16", model, "single",
-    #                          './trained_models_task_a/vgg16/single/vgg16.pth')
+    # model_type = "vgg16"
+    # mode = "single"
+    # file_path = "../trained_models_task_a/vgg16/single/vgg16.pth"
 
-    # model = SingleImageModel("resnet34")
-    # generate_gradcam_heatmap("resnet34", model, "single",
-    #                          './trained_models_task_a/resnet34/single/resnet34.pth')
+    # model_type = "vgg16"
+    # mode = "dual"
+    # file_path = "../trained_models_task_a/vgg16/dual/vgg16_dual.pth"
 
-    # model = SingleImageModel("resnet18")
-    # generate_gradcam_heatmap("resnet18", model, "single", './trained_models_task_a/resnet18/single/resnet13.pth')
+    # model_type = "resnet18"
+    # mode = "patient_level"
+    # file_path = "../trained_models_b/resnet18/second_stage_pt_level/second_stage_resnet18_pt_level.pth"
 
-    # model = SecondStageModel(model="densenet121")
-    # generate_gradcam_heatmap("resnet18", model, "patient_level", './trained_models_b/resnet18/second_stage_pt_level/second_stage_resnet18_pt_level.pth')
+    # model_type = "densenet121"
+    # mode = "patient_level"
+    # file_path = "../trained_models_b/densenet121/second_stage_pt_level/second_stage_densenet121_pt_level.pth"
 
-    # model = SecondStageModel(model="efficientnet_b0")
-    # generate_gradcam_heatmap("efficientnet_b0", model, "patient_level", './trained_models_b/efficientnet_b0/second_stage_pt_level/second_stage_eff_b0_pt_level.pth')
+    run_grandcam_generate_heatmap(model_type, mode, file_path)

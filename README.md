@@ -12,10 +12,27 @@ The project consists of 5 subfolders from part_a to part_e in which the code is 
 The shared folder contains reusable code extracted from the provided template code.
 
 ### part_a
+`part_a` contains the implementation for fine-tuning a pretrained model using the DeepDRiD dataset.
+
+- Navigate to part_a/ folder and Find part_a/main_a.py which is the executable file for part a.
+- You need to select one from 2 available running modes. It can be either `mode = 'single'` or `mode = 'dual'`
+- Next, set the `model_type`. Choose one from `resnet18`, `resnet34`, `vgg16`, `efficientnet_b0`, `densenet121`
+- Run the python file either using `python main_a.py` or using the IDE.
 
 ### part_b
+`part_b` contains the implementation for transfer learning. A model is first trained with APTOS 2019 dataset and then trained with DeepDRiD dataset.
+
+- Navigate to part_a/ folder and Find part_b/two_staged_transfer_learning.py which is the executable file for part b.
+- You need to select one from supported 5 `model_type`s. `VGG16`, `RESNET18`, `RESNET34`, `DENSENET121`, `EFFICIENTNET_B0`.
+- Next, select the `training_mode`. It can be either `TrainingModes.STANDARD.value` or `training_mode = TrainingModes.PATIENT_LEVEL.value`.
+- Run the python file either using `python two_staged_transfer_learning.py` or using the IDE.
 
 ### part_c
+`part_c` contains the implementation for attention mechanisms. The model is trained with 3 mechanisms (self attention, channel attention, spatial attention)
+
+- Navigate to part_c/ folder and Find part_c/attention_code.py which is the executable file for part c.
+- You need to select the `attention_mode`. It could be `AttentionModes.SELF` for self attention. `AttentionModes.CHANNEL` for channel attention. `AttentionModes.SPATIAL` for spatial attention.
+- Run the python file either using `python attention_code.py` or using the IDE.
 
 ### part_d
 `part_d` contains the implementations for ensemble learning techniques and image preprocessing techniques.
@@ -39,7 +56,13 @@ Since by running `main_d.py` we already figured out `denseNet121` is the best pe
 eg: Gaussian Blur --> Circle Crop, Circle Crop --> Gaussian Blur --> Sharpen, etc
 
 ### part_e
-`part_e` contains the visualization mechanisms which are used by the other sections of the project.
+`part_e` contains the visualization mechanisms which are used by the other sections of the project. To execute Grad-CAM visualizations, follow the below steps.
+
+- Navigate to part_e/ folder and Find part_e/gradcam_visualization.py which is the executable file for part e.
+- You need to select one from supported 5 `model_type`s. `resnet18`, `resnet34`, `vgg16`, `efficientnet_b0`, `densenet121`.
+- Then you need to select one from 3 available running modes. It can be either `mode = 'single'`, `mode = 'dual'` or `mode = 'patient_level'`
+- Then attach the file path of the pretrained model to `file_path`. Please be very specific with the file path. A wrong model will not give results. It will throw errors.
+- Ex: If you choose resnet18 dual mode, you have to specifically mention resnet18 dual image trained model path.
 
 ### shared
 `shared` folder contains code extracted from the template code mostly. It is being imported into other parts of the project and reused.
